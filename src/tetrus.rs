@@ -3,12 +3,30 @@ use std::fmt::Debug;
 use crate::constants::GRID_WIDTH;
 use crate::constants::GRID_HEIGHT;
 
+use macroquad::color_u8;
+use macroquad::prelude::Color;
+
+const YELLOW: Color = color_u8!(0xfa, 0xff, 0x00, 0xff); //faff00
+const CYAN: Color = color_u8!(0x00, 0xe4, 0xff, 0xff); //00e4ff
+const RED: Color = color_u8!(0xf6, 0x00, 0x00, 0xff); //f60000
+const GREEN: Color = color_u8!(0x69, 0xb6, 0x25, 0xff); //69b625
+const ORANGE: Color = color_u8!(0xff, 0x8d, 0x00, 0xff); //ff8d00
+const PINK: Color = color_u8!(0xff, 0x51, 0xbc, 0xff); //ff51bc
+const PURPLE: Color = color_u8!(0x9f, 0x00, 0x96, 0xff); //9f0096
+const _WHITE: Color = color_u8!(0xff, 0xff, 0xff, 0xff); //ffffff
+const BLACK: Color = color_u8!(0x00, 0x00, 0x00, 0xff); //000000
+
 #[derive(Clone, Copy)]
 pub struct Block {
     pub populated: bool,
     pub locked: bool,
-    //color?
-    //position?
+    pub color: Color,
+}
+
+impl Block {
+    fn new(color: Color) -> Block {
+        Block { populated: true, locked: false, color: color }
+    }
 }
 
 impl Default for Block {
@@ -16,6 +34,7 @@ impl Default for Block {
         Block {
             populated: false,
             locked: false,
+            color: BLACK
         }
     }
 }
@@ -41,60 +60,39 @@ impl Tetrus {
         }
     }
 
-    pub fn create_active(&mut self, pos: usize) {
-        self.grid[pos] = Block {
-            populated: true,
-            locked: false,
-        }
+    pub fn create_block(&mut self, p1: usize, p2: usize, p3: usize, p4: usize, color: Color) {
+        self.grid[p1] = Block::new(color);
+        self.grid[p2] = Block::new(color);
+        self.grid[p3] = Block::new(color);
+        self.grid[p4] = Block::new(color);
     }
 
     pub fn spawn_i(&mut self) {
-        self.create_active(5);
-        self.create_active(15);
-        self.create_active(25);
-        self.create_active(35);
+        self.create_block(5, 15, 25, 35, CYAN);
     }
 
     pub fn spawn_j(&mut self) {
-        self.create_active(15);
-        self.create_active(25);
-        self.create_active(34);
-        self.create_active(35);
+        self.create_block(15, 25, 34, 35, PINK);
     }
 
     pub fn spawn_l(&mut self) {
-        self.create_active(14);
-        self.create_active(24);
-        self.create_active(34);
-        self.create_active(35);
+        self.create_block(14, 24, 34, 35, ORANGE);
     }
 
     pub fn spawn_o(&mut self) {
-        self.create_active(24);
-        self.create_active(25);
-        self.create_active(34);
-        self.create_active(35);
+        self.create_block(24, 25, 34, 35, YELLOW);
     }
 
     pub fn spawn_s(&mut self) {
-        self.create_active(14);
-        self.create_active(24);
-        self.create_active(25);
-        self.create_active(35);
+        self.create_block(14, 24, 25, 35, RED);
     }
 
     pub fn spawn_t(&mut self) {
-        self.create_active(14);
-        self.create_active(24);
-        self.create_active(25);
-        self.create_active(34);
+        self.create_block(14, 24, 25, 34, PURPLE);
     }
 
     pub fn spawn_z(&mut self) {
-        self.create_active(15);
-        self.create_active(24);
-        self.create_active(25);
-        self.create_active(34);
+        self.create_block(15, 24, 25, 34, GREEN);
     }
 
     pub fn lock_grid(&mut self) {
