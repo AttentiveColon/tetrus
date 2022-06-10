@@ -1,11 +1,3 @@
-use crate::miniquad::conf::Icon;
-
-pub const ICON: Icon = Icon {
-    small: ICON_SMALL,
-    medium: ICON_MEDIUM,
-    big: ICON_BIG,
-};
-
 pub const ICON_SMALL: [u8; 16 * 16 * 4] = [
     32, 32, 32, 126, 34, 34, 34, 249, 34, 34, 34, 255, 34, 34, 34, 255, 34, 34, 34, 255, 34, 34,
     34, 255, 34, 34, 34, 255, 34, 34, 34, 255, 34, 34, 34, 255, 34, 34, 34, 255, 34, 34, 34, 255,

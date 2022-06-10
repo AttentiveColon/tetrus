@@ -1,52 +1,45 @@
 use std::fmt::Debug;
 
-use crate::constants::GRID_WIDTH;
-use crate::constants::GRID_HEIGHT;
-
-use macroquad::color_u8;
 use macroquad::prelude::Color;
 
-const YELLOW: Color = color_u8!(0xfa, 0xff, 0x00, 0xff); //faff00
-const CYAN: Color = color_u8!(0x00, 0xe4, 0xff, 0xff); //00e4ff
-const RED: Color = color_u8!(0xf6, 0x00, 0x00, 0xff); //f60000
-const GREEN: Color = color_u8!(0x69, 0xb6, 0x25, 0xff); //69b625
-const ORANGE: Color = color_u8!(0xff, 0x8d, 0x00, 0xff); //ff8d00
-const PINK: Color = color_u8!(0xff, 0x51, 0xbc, 0xff); //ff51bc
-const PURPLE: Color = color_u8!(0x9f, 0x00, 0x96, 0xff); //9f0096
-const _WHITE: Color = color_u8!(0xff, 0xff, 0xff, 0xff); //ffffff
-const BLACK: Color = color_u8!(0x00, 0x00, 0x00, 0xff); //000000
+use crate::constants::{GRID_HEIGHT, GRID_WIDTH};
+use crate::constants::{YELLOW, CYAN, RED, GREEN, ORANGE, PINK, PURPLE, BLACK};
 
 #[derive(Clone, Copy)]
 pub struct Block {
-    pub populated: bool,
-    pub locked: bool,
+    pub is_populated: bool,
+    pub is_locked: bool,
     pub color: Color,
 }
 
 impl Block {
     fn new(color: Color) -> Block {
-        Block { populated: true, locked: false, color: color }
+        Block {
+            is_populated: true,
+            is_locked: false,
+            color,
+        }
     }
 }
 
 impl Default for Block {
     fn default() -> Self {
         Block {
-            populated: false,
-            locked: false,
-            color: BLACK
+            is_populated: false,
+            is_locked: false,
+            color: BLACK,
         }
     }
 }
 
-impl Debug for Block {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        if self.populated {
-            write!(f, "1")
-        } else {
-            write!(f, "0")
-        }
-    }
+pub enum BlockType {
+    I,
+    J,
+    L,
+    O,
+    S,
+    T,
+    Z,
 }
 
 pub struct Tetrus {
@@ -67,54 +60,37 @@ impl Tetrus {
         self.grid[p4] = Block::new(color);
     }
 
-    pub fn spawn_i(&mut self) {
-        self.create_block(5, 15, 25, 35, CYAN);
-    }
-
-    pub fn spawn_j(&mut self) {
-        self.create_block(15, 25, 34, 35, PINK);
-    }
-
-    pub fn spawn_l(&mut self) {
-        self.create_block(14, 24, 34, 35, ORANGE);
-    }
-
-    pub fn spawn_o(&mut self) {
-        self.create_block(24, 25, 34, 35, YELLOW);
-    }
-
-    pub fn spawn_s(&mut self) {
-        self.create_block(14, 24, 25, 35, RED);
-    }
-
-    pub fn spawn_t(&mut self) {
-        self.create_block(14, 24, 25, 34, PURPLE);
-    }
-
-    pub fn spawn_z(&mut self) {
-        self.create_block(15, 24, 25, 34, GREEN);
+    pub fn spawn_block(&mut self, block: BlockType) {
+        match block {
+            BlockType::I => self.create_block(5, 15, 25, 35, CYAN),
+            BlockType::J => self.create_block(15, 25, 34, 35, PINK),
+            BlockType::L => self.create_block(14, 24, 34, 35, ORANGE),
+            BlockType::O => self.create_block(24, 25, 34, 35, YELLOW),
+            BlockType::S => self.create_block(14, 24, 25, 35, RED),
+            BlockType::T => self.create_block(14, 24, 25, 34, PURPLE),
+            BlockType::Z => self.create_block(15, 24, 25, 34, GREEN),
+        }
     }
 
     pub fn lock_grid(&mut self) {
         for i in 0..(GRID_WIDTH * GRID_HEIGHT) {
-            if self.grid[i].populated {
-                self.grid[i].locked = true;
+            if self.grid[i].is_populated {
+                self.grid[i].is_locked = true;
             }
         }
     }
 
     pub fn check_collision(&mut self) {
-        for i in 0..(GRID_WIDTH * GRID_HEIGHT) {
-            if self.grid[i].populated && !self.grid[i].locked {
-                if i > (GRID_WIDTH * GRID_HEIGHT) - GRID_WIDTH {
+        for i in (0..(GRID_WIDTH * GRID_HEIGHT)).rev() {
+            if self.grid[i].is_populated && !self.grid[i].is_locked {
+                if i > (GRID_WIDTH * GRID_HEIGHT) - GRID_WIDTH
+                    || (i < self.grid.len() - 11
+                        && self.grid[i + 10].is_locked
+                        && self.grid[i + 10].is_populated)
+                {
                     self.lock_grid();
-                    
-                    return ();
-                }
-                else if self.grid[i + 10].populated && self.grid[i + 10].locked {
-                    self.lock_grid();
-                    
-                    return ();
+
+                    return;
                 }
             }
         }
@@ -122,7 +98,7 @@ impl Tetrus {
 
     pub fn move_unlocked(&mut self) {
         for i in (0..(GRID_WIDTH * GRID_HEIGHT)).rev() {
-            if self.grid[i].populated && !self.grid[i].locked {
+            if self.grid[i].is_populated && !self.grid[i].is_locked {
                 self.grid[i + 10] = self.grid[i];
                 self.grid[i] = Block::default();
             }
@@ -131,13 +107,76 @@ impl Tetrus {
 
     pub fn is_game_over(&self) -> bool {
         for i in 0..(GRID_WIDTH * 4) {
-            if self.grid[i].locked {
-                return true
+            if self.grid[i].is_locked {
+                return true;
             }
         }
         false
     }
+
+    fn get_active_blocks(&self) -> Vec<usize> {
+        let mut t_vec = Vec::new();
+        for i in 0..(GRID_WIDTH * GRID_HEIGHT) {
+            if self.grid[i].is_populated && !self.grid[i].is_locked {
+                t_vec.push(i);
+            }
+        }
+
+        t_vec
+    }
+
+    fn is_colliding_left(&self, blocks: Vec<usize>) -> bool {
+        println!("{:?}", blocks);
+        for i in blocks {
+            if self.grid[i - 1].is_populated && i % 10 != 1 {
+                println!("returned true from collision");
+                return true;
+            }
+        }
+        println!("returned false from collision");
+        false
+    }
+
+    pub fn player_move_left(&mut self) {
+        if self.is_colliding_left(self.get_active_blocks()) {
+            for i in self.get_active_blocks() {
+                if i != self.grid.len() - 1 {
+                    self.grid[i - 1] = self.grid[i];
+                    self.grid[i] = Block::default();
+                }
+            }
+            println!("Moved left");
+        }
+    }
+
+    fn is_colliding_right(&self, blocks: Vec<usize>) -> bool {
+        println!("{:?}", blocks);
+        for i in blocks {
+            if i != self.grid.len() - 1 && self.grid[i + 1].is_populated && i % 10 != 8 {
+                println!("returned true from collision");
+                return true;
+            }
+        }
+        println!("returned false from collision");
+        false
+    }
+
+    pub fn player_move_right(&mut self) {
+        if self.is_colliding_right(self.get_active_blocks()) {
+            for i in self.get_active_blocks().into_iter().rev() {
+                if i != self.grid.len() - 1 {
+                    self.grid[i + 1] = self.grid[i];
+                    self.grid[i] = Block::default();
+                }
+            }
+        }
+        println!("Moved right");
+    }
 }
+
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------
 
 impl Debug for Tetrus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -148,7 +187,7 @@ impl Debug for Tetrus {
             if i == 40 {
                 result += "----------\n";
             }
-            if self.grid[i].populated {
+            if self.grid[i].is_populated {
                 result += "█";
             } else {
                 result += "░";
@@ -160,5 +199,15 @@ impl Debug for Tetrus {
             }
         }
         write!(f, "{result}")
+    }
+}
+
+impl Debug for Block {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self.is_populated {
+            write!(f, "1")
+        } else {
+            write!(f, "0")
+        }
     }
 }
