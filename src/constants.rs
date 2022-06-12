@@ -12,6 +12,7 @@ pub const ICON: Icon = Icon {
 
 pub const GRID_WIDTH: usize = 10;
 pub const GRID_HEIGHT: usize = 24;
+pub const ACTIVE_GRID_OFFSET: usize = 40;
 pub const DISPLAY_PADDING: f32 = 100.0;
 pub const DISPLAY_WIDTH: f32 = 600.0;
 pub const DISPLAY_HEIGHT: f32 = 1000.0;
@@ -26,3 +27,11 @@ pub const PINK: Color = color_u8!(0xff, 0x51, 0xbc, 0xff); //ff51bc
 pub const PURPLE: Color = color_u8!(0x9f, 0x00, 0x96, 0xff); //9f0096
 pub const _WHITE: Color = color_u8!(0xff, 0xff, 0xff, 0xff); //ffffff
 pub const BLACK: Color = color_u8!(0x00, 0x00, 0x00, 0xff); //000000
+
+pub const IBLOCK: [(usize, usize); 4] = [(5, 0), (5, 1), (5, 2), (5, 3)];
+pub const JBLOCK: [(usize, usize); 4] = [(5, 1), (5, 2), (4, 3), (5, 3)];
+pub const LBLOCK: [(usize, usize); 4] = [(4, 1), (4, 2), (4, 3), (5, 3)];
+pub const OBLOCK: [(usize, usize); 4] = [(4, 2), (5, 2), (4, 3), (5, 3)];
+pub const SBLOCK: [(usize, usize); 4] = [(4, 1), (4, 2), (5, 2), (5, 3)];
+pub const TBLOCK: [(usize, usize); 4] = [(4, 1), (4, 2), (5, 2), (4, 3)];
+pub const ZBLOCK: [(usize, usize); 4] = [(5, 1), (4, 2), (5, 2), (4, 3)];

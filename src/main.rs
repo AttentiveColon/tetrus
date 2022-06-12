@@ -2,12 +2,14 @@ use ::rand::Rng;
 use macroquad::prelude::scene::clear;
 use macroquad::prelude::*;
 
-use constants::{BLOCK_SIZE, DISPLAY_HEIGHT, DISPLAY_PADDING, DISPLAY_WIDTH, ICON};
-use tetrus::{BlockType, Tetrus};
+use constants::{
+    ACTIVE_GRID_OFFSET, BLOCK_SIZE, DISPLAY_HEIGHT, DISPLAY_PADDING, DISPLAY_WIDTH, ICON,
+};
+use tetrus::Tetrus;
 
+mod constants;
 mod icons;
 mod tetrus;
-mod constants;
 
 fn get_mq_conf() -> macroquad::prelude::Conf {
     macroquad::prelude::Conf {
@@ -21,27 +23,30 @@ fn get_mq_conf() -> macroquad::prelude::Conf {
     }
 }
 
-fn get_xy(pos: usize) -> (f32, f32) {
-    let x = (pos % 10) as f32 * BLOCK_SIZE + DISPLAY_PADDING;
-    let y = (pos / 10) as f32 * BLOCK_SIZE + DISPLAY_PADDING;
-
-    (x, y)
-}
-
 fn draw(tetrus: &Tetrus) {
-    draw_blocks(tetrus);
-    draw_grid();
-}
-
-fn draw_blocks(tetrus: &Tetrus) {
-    for i in 40..tetrus.grid.len() {
-        let (x, y) = get_xy(i - 40);
-        let color = tetrus.grid[i].color;
-        draw_rectangle(x, y, BLOCK_SIZE, BLOCK_SIZE, color);
+    for block in &tetrus.active {
+        if block.position.y > 3 {
+            draw_rectangle(
+                (block.position.x as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
+                (block.position.y as f32 * BLOCK_SIZE) + DISPLAY_PADDING - (4.0 * BLOCK_SIZE),
+                BLOCK_SIZE,
+                BLOCK_SIZE,
+                block.color,
+            )
+        }
     }
-}
+    for block in &tetrus.inactive {
+        if block.position.y > 3 {
+            draw_rectangle(
+                (block.position.x as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
+                (block.position.y as f32 * BLOCK_SIZE) + DISPLAY_PADDING - (4.0 * BLOCK_SIZE),
+                BLOCK_SIZE,
+                BLOCK_SIZE,
+                block.color,
+            )
+        }
+    }
 
-fn draw_grid() {
     for i in 0..11 {
         draw_line(
             (i as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
@@ -65,51 +70,45 @@ fn draw_grid() {
 }
 
 fn player_input(tetrus: &mut Tetrus) {
-    if is_key_pressed(KeyCode::A) {
-        tetrus.player_move_left();
-    } else if is_key_pressed(KeyCode::D) {
-        tetrus.player_move_right();
-    } else if is_key_pressed(KeyCode::Escape) {
+    if is_key_pressed(KeyCode::Escape) {
         std::process::exit(0);
-    } else if is_key_pressed(KeyCode::O) {
-        let num = ::rand::thread_rng().gen_range(1..7);
-        match num {
-            0 => tetrus.spawn_block(BlockType::I),
-            1 => tetrus.spawn_block(BlockType::J),
-            2 => tetrus.spawn_block(BlockType::L),
-            3 => tetrus.spawn_block(BlockType::O),
-            4 => tetrus.spawn_block(BlockType::S),
-            5 => tetrus.spawn_block(BlockType::T),
-            6 => tetrus.spawn_block(BlockType::Z),
-            _ => panic!(),
-        }
+    } else if is_key_pressed(KeyCode::A) {
+        tetrus.move_left();
+    } else if is_key_pressed(KeyCode::D) {
+        tetrus.move_right();
+    } else if is_key_pressed(KeyCode::Space) {
+        tetrus.drop_block();
     }
 }
 
-#[macroquad::main(get_mq_conf)]
-async fn main() {
+async fn run() -> bool {
     let mut last_update = get_time();
     let tick = 0.2;
     let mut tetrus = Tetrus::new();
 
     loop {
         player_input(&mut tetrus);
-
         if get_time() - last_update > tick {
             last_update = get_time();
-            tetrus.check_collision();
-            tetrus.move_unlocked();
-            //println!("{:?}", tetrus);
+            if !tetrus.is_active() {
+                tetrus.spawn_block();
+            } else {
+                tetrus.update_active()
+            }
+            
+            
         }
-
         draw(&tetrus);
-
-        
         if tetrus.is_game_over() {
-            println!("GAME OVER");
-            break;
+            return false;
+        } else {
+            clear();
+            next_frame().await
         }
-        clear();
-        next_frame().await
     }
+}
+
+#[macroquad::main(get_mq_conf)]
+async fn main() {
+    while run().await {}
 }
