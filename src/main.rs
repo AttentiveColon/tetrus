@@ -6,6 +6,7 @@ use constants::{
     ACTIVE_GRID_OFFSET, BLOCK_SIZE, DISPLAY_HEIGHT, DISPLAY_PADDING, DISPLAY_WIDTH, ICON,
 };
 use tetrus::Tetrus;
+use tetrus::Direction;
 
 mod constants;
 mod icons;
@@ -73,11 +74,11 @@ fn player_input(tetrus: &mut Tetrus) {
     if is_key_pressed(KeyCode::Escape) {
         std::process::exit(0);
     } else if is_key_pressed(KeyCode::A) {
-        tetrus.move_left();
+        tetrus.player_move(Direction::Left);
     } else if is_key_pressed(KeyCode::D) {
-        tetrus.move_right();
-    } else if is_key_pressed(KeyCode::Space) {
-        tetrus.drop_block();
+        tetrus.player_move(Direction::Right);
+    } else if is_key_pressed(KeyCode::Space) && tetrus.is_active() {
+        tetrus.player_move(Direction::Drop);
     }
 }
 
@@ -96,6 +97,7 @@ async fn run() -> bool {
                 tetrus.update_active()
             }
             
+            println!("origin: {:?}", tetrus.origin);
             
         }
         draw(&tetrus);

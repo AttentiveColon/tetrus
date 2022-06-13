@@ -12,6 +12,7 @@ pub const ICON: Icon = Icon {
 
 pub const GRID_WIDTH: usize = 10;
 pub const GRID_HEIGHT: usize = 24;
+pub const GRID_ROW_START: usize = 4;
 pub const ACTIVE_GRID_OFFSET: usize = 40;
 pub const DISPLAY_PADDING: f32 = 100.0;
 pub const DISPLAY_WIDTH: f32 = 600.0;
@@ -35,3 +36,11 @@ pub const OBLOCK: [(usize, usize); 4] = [(4, 2), (5, 2), (4, 3), (5, 3)];
 pub const SBLOCK: [(usize, usize); 4] = [(4, 1), (4, 2), (5, 2), (5, 3)];
 pub const TBLOCK: [(usize, usize); 4] = [(4, 1), (4, 2), (5, 2), (4, 3)];
 pub const ZBLOCK: [(usize, usize); 4] = [(5, 1), (4, 2), (5, 2), (4, 3)];
+
+pub const IORIGIN: (usize, usize) = (5, 2);
+pub const JORIGIN: (usize, usize) = (5, 2);
+pub const LORIGIN: (usize, usize) = (4, 2);
+pub const OORIGIN: (usize, usize) = (4, 3);
+pub const SORIGIN: (usize, usize) = (5, 2);
+pub const TORIGIN: (usize, usize) = (4, 2);
+pub const ZORIGIN: (usize, usize) = (5, 2);
