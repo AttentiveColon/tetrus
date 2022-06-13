@@ -1,13 +1,7 @@
 use macroquad::prelude::Color;
 use rand::prelude::ThreadRng;
 use rand::{thread_rng, Rng};
-
-//use crate::constants::{GRID_HEIGHT, GRID_WIDTH};
-use crate::constants::{
-    BLACK, CYAN, GREEN, GRID_HEIGHT, GRID_WIDTH, ORANGE, PINK, PURPLE, RED, YELLOW,
-};
-use crate::constants::{IBLOCK, JBLOCK, LBLOCK, OBLOCK, SBLOCK, TBLOCK, ZBLOCK};
-use crate::constants::{IORIGIN, JORIGIN, LORIGIN, OORIGIN, SORIGIN, TORIGIN, ZORIGIN};
+use crate::constants::*;
 
 pub enum Movement {
     Left,
@@ -65,6 +59,7 @@ pub struct Tetrus {
     pub inactive: Vec<Block>,
     pub origin: Position,
     pub block_id: BlockType,
+    pub tick: f64,
     pub rng: ThreadRng,
 }
 
@@ -75,6 +70,7 @@ impl Tetrus {
             inactive: Vec::new(),
             origin: Position::new((0, 0)),
             block_id: BlockType::I,
+            tick: 0.4,
             rng: thread_rng(),
         }
     }
@@ -198,9 +194,16 @@ impl Tetrus {
                     }
                 }
                 self.inactive = temp_inactive;
+                return true;
             }
         }
         false
+    }
+
+    pub fn update_tick(&mut self) {
+        if self.tick >= 0.1 {
+            self.tick -= 0.02;
+        }
     }
 
     pub fn update_active(&mut self) {
@@ -208,7 +211,9 @@ impl Tetrus {
             self.move_active();
         } else {
             self.change_status();
-            self.check_clear();
+            if self.check_clear() {
+                self.update_tick();
+            }
         }
     }
 
@@ -265,16 +270,14 @@ impl Tetrus {
                 }
             }
             Movement::Rotate => {
-                if self.block_id == BlockType::O {
-                    return;
-                } else {
+                if self.block_id != BlockType::O {
                     self.rotate_block();
                 }
             }
         }
     }
 
-    pub fn is_game_over(&mut self) -> bool {
+    pub fn is_game_over(&self) -> bool {
         for block in &self.inactive {
             if block.position.y <= 3 {
                 return true;

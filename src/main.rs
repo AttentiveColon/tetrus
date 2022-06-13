@@ -1,11 +1,6 @@
-use macroquad::prelude::scene::clear;
 use macroquad::prelude::*;
-
-use constants::{
-    BLOCK_SIZE, DISPLAY_HEIGHT, DISPLAY_PADDING, DISPLAY_WIDTH, ICON,
-};
-use tetrus::Movement;
-use tetrus::Tetrus;
+use tetrus::*;
+use constants::*;
 
 mod constants;
 mod icons;
@@ -72,37 +67,38 @@ fn draw(tetrus: &Tetrus) {
 fn player_input(tetrus: &mut Tetrus) {
     if is_key_pressed(KeyCode::Escape) {
         std::process::exit(0);
-    } else if is_key_pressed(KeyCode::A) && tetrus.is_active() {
+    } else if is_key_pressed(KeyCode::A) {
         tetrus.player_move(Movement::Left);
-    } else if is_key_pressed(KeyCode::D) && tetrus.is_active() {
+    } else if is_key_pressed(KeyCode::D) {
         tetrus.player_move(Movement::Right);
-    } else if is_key_pressed(KeyCode::Space) && tetrus.is_active() {
+    } else if is_key_pressed(KeyCode::Space) {
         tetrus.player_move(Movement::Drop);
-    } else if is_key_pressed(KeyCode::S) && tetrus.is_active() {
+    } else if is_key_pressed(KeyCode::S) {
         tetrus.player_move(Movement::Rotate);
     }
 }
 
 async fn run() -> bool {
     let mut last_update = get_time();
-    let tick = 0.4;
+    //let tick = 0.4;
     let mut tetrus = Tetrus::new();
 
     loop {
-        player_input(&mut tetrus);
-        if get_time() - last_update > tick {
+        if tetrus.is_active() {
+            player_input(&mut tetrus);
+        }
+        if get_time() - last_update > tetrus.tick {
             last_update = get_time();
             if !tetrus.is_active() {
                 tetrus.spawn_block();
             } else {
-                tetrus.update_active()
+                tetrus.update_active();
             }
         }
         draw(&tetrus);
         if tetrus.is_game_over() {
             return false;
         } else {
-            clear();
             next_frame().await
         }
     }

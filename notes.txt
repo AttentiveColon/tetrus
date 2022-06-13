@@ -1,4 +1,5 @@
 Todo:
+increase game speed with each line clear //sorta done
 restart game
 scoring
 title text
