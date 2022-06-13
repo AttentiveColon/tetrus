@@ -12,8 +12,6 @@ pub const ICON: Icon = Icon {
 
 pub const GRID_WIDTH: usize = 10;
 pub const GRID_HEIGHT: usize = 24;
-pub const GRID_ROW_START: usize = 4;
-pub const ACTIVE_GRID_OFFSET: usize = 40;
 pub const DISPLAY_PADDING: f32 = 100.0;
 pub const DISPLAY_WIDTH: f32 = 600.0;
 pub const DISPLAY_HEIGHT: f32 = 1000.0;

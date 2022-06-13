@@ -1,18 +1,19 @@
-use std::fmt::Debug;
-
+use macroquad::prelude::Color;
 use rand::prelude::ThreadRng;
 use rand::{thread_rng, Rng};
-use macroquad::prelude::Color;
 
 //use crate::constants::{GRID_HEIGHT, GRID_WIDTH};
-use crate::constants::{YELLOW, CYAN, RED, GREEN, ORANGE, PINK, PURPLE, BLACK, GRID_WIDTH, GRID_HEIGHT, GRID_ROW_START};
+use crate::constants::{
+    BLACK, CYAN, GREEN, GRID_HEIGHT, GRID_WIDTH, ORANGE, PINK, PURPLE, RED, YELLOW,
+};
 use crate::constants::{IBLOCK, JBLOCK, LBLOCK, OBLOCK, SBLOCK, TBLOCK, ZBLOCK};
 use crate::constants::{IORIGIN, JORIGIN, LORIGIN, OORIGIN, SORIGIN, TORIGIN, ZORIGIN};
 
-pub enum Direction {
+pub enum Movement {
     Left,
     Right,
     Drop,
+    Rotate,
 }
 
 pub enum Collision {
@@ -21,7 +22,7 @@ pub enum Collision {
     Down,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Clone, PartialEq)]
 pub enum BlockType {
     I,
     J,
@@ -32,7 +33,7 @@ pub enum BlockType {
     Z,
 }
 
-#[derive(Default, Clone, Copy, PartialEq, Debug)]
+#[derive(Default, Clone, PartialEq)]
 pub struct Position {
     pub x: usize,
     pub y: usize,
@@ -40,11 +41,11 @@ pub struct Position {
 
 impl Position {
     fn new(pos: (usize, usize)) -> Self {
-        Position { x: pos.0, y: pos.1, }
+        Position { x: pos.0, y: pos.1 }
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone)]
 pub struct Block {
     pub position: Position,
     pub color: Color,
@@ -81,10 +82,7 @@ impl Tetrus {
     pub fn create_block(&mut self, color: Color, blocks: [(usize, usize); 4], id: BlockType) {
         for block in blocks {
             let position = Position::new(block);
-            self.active.push(Block {
-                position,
-                color,
-            } )
+            self.active.push(Block { position, color })
         }
         self.block_id = id.clone();
         match id {
@@ -113,7 +111,7 @@ impl Tetrus {
 
     pub fn is_active(&self) -> bool {
         if self.active.is_empty() {
-            return false
+            return false;
         }
         true
     }
@@ -132,39 +130,48 @@ impl Tetrus {
                         return true;
                     }
                     for col_block in &self.inactive {
-                        if block.position == Position::new((col_block.position.x + 1, col_block.position.y)) {
+                        if block.position
+                            == Position::new((col_block.position.x + 1, col_block.position.y))
+                        {
                             return true;
                         }
                     }
                 }
                 false
-            },
+            }
             Collision::Right => {
                 for block in &self.active {
                     if block.position.x == 9 {
                         return true;
                     }
                     for col_block in &self.inactive {
-                        if block.position == Position::new((col_block.position.x.saturating_sub(1), col_block.position.y)) {
+                        if block.position
+                            == Position::new((
+                                col_block.position.x.saturating_sub(1),
+                                col_block.position.y,
+                            ))
+                        {
                             return true;
                         }
                     }
                 }
                 false
-            },
+            }
             Collision::Down => {
                 for block in &self.active {
                     if block.position.y >= 23 {
                         return true;
-                    } 
+                    }
                     for col_block in &self.inactive {
-                        if block.position == Position::new((col_block.position.x, col_block.position.y - 1)) {
+                        if block.position
+                            == Position::new((col_block.position.x, col_block.position.y - 1))
+                        {
                             return true;
                         }
                     }
                 }
                 false
-            },
+            }
         }
     }
 
@@ -179,7 +186,12 @@ impl Tetrus {
         for i in 4..GRID_HEIGHT {
             let count = self.inactive.iter().filter(|n| n.position.y == i).count();
             if count == GRID_WIDTH {
-                let mut temp_inactive: Vec<Block> = self.inactive.iter().cloned().filter(|n| n.position.y != i).collect();
+                let mut temp_inactive: Vec<Block> = self
+                    .inactive
+                    .iter()
+                    .cloned()
+                    .filter(|n| n.position.y != i)
+                    .collect();
                 for val in &mut temp_inactive {
                     if val.position.y < i {
                         val.position.y += 1;
@@ -200,29 +212,65 @@ impl Tetrus {
         }
     }
 
-    pub fn player_move(&mut self, direction: Direction) {
+    pub fn rotate_block(&mut self) {
+        let mut active_rotated: Vec<Block> = Vec::new();
+        for block in &mut self.active {
+            let offset_x: i32 = self.origin.x as i32 - block.position.x as i32;
+            let offset_y: i32 = self.origin.y as i32 - block.position.y as i32;
+            let x1 = offset_y;
+            let y1 = -offset_x;
+
+            let x = self.origin.x as i32 + x1;
+            let y = self.origin.y as i32 + y1;
+
+            active_rotated.push(Block {
+                position: Position::new((x as usize, y as usize)),
+                color: block.color,
+            })
+        }
+        for temp in &active_rotated {
+            if temp.position.x >= GRID_WIDTH || temp.position.y >= GRID_HEIGHT {
+                return;
+            }
+            for block in &self.inactive {
+                if block.position == temp.position {
+                    return;
+                }
+            }
+        }
+        self.active = active_rotated;
+    }
+
+    pub fn player_move(&mut self, direction: Movement) {
         match direction {
-            Direction::Left => {
+            Movement::Left => {
                 if !self.check_collision(Collision::Left) {
                     for mut block in &mut self.active {
                         block.position.x -= 1;
                     }
                     self.origin.x -= 1;
                 }
-            },
-            Direction::Right => {
+            }
+            Movement::Right => {
                 if !self.check_collision(Collision::Right) {
                     for mut block in &mut self.active {
                         block.position.x += 1;
                     }
                     self.origin.x += 1;
                 }
-            },
-            Direction::Drop => {
+            }
+            Movement::Drop => {
                 while !self.check_collision(Collision::Down) {
                     self.move_active();
                 }
-            },
+            }
+            Movement::Rotate => {
+                if self.block_id == BlockType::O {
+                    return;
+                } else {
+                    self.rotate_block();
+                }
+            }
         }
     }
 
@@ -234,11 +282,8 @@ impl Tetrus {
         }
         false
     }
-
-    
 }
 
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------
-
