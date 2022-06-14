@@ -1,6 +1,5 @@
 use crate::miniquad::conf::Icon;
-use macroquad::prelude::Color;
-use macroquad::color_u8;
+use macroquad::prelude::*;
 
 use crate::icons::{ICON_SMALL, ICON_MEDIUM, ICON_BIG};
 
@@ -42,3 +41,8 @@ pub const OORIGIN: (usize, usize) = (4, 3);
 pub const SORIGIN: (usize, usize) = (5, 2);
 pub const TORIGIN: (usize, usize) = (4, 2);
 pub const ZORIGIN: (usize, usize) = (5, 2);
+
+pub const TETRUS_TEXT: &str = "Tetrus";
+pub const SPACE_TEXT: &str = "Press Space";
+pub const GAME_OVER_TEXT: &str = "Game Over";
+pub const SCORE_TEXT_PLACEHOLDER: &str = "Score: 00000";
