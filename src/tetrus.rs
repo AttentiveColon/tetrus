@@ -60,6 +60,7 @@ pub struct Tetrus {
     pub origin: Position,
     pub block_id: BlockType,
     pub tick: f64,
+    pub score: u32,
     pub rng: ThreadRng,
 }
 
@@ -71,11 +72,12 @@ impl Tetrus {
             origin: Position::new((0, 0)),
             block_id: BlockType::I,
             tick: 0.4,
+            score: 0,
             rng: thread_rng(),
         }
     }
 
-    pub fn create_block(&mut self, color: Color, blocks: [(usize, usize); 4], id: BlockType) {
+    fn create_block(&mut self, color: Color, blocks: [(usize, usize); 4], id: BlockType) {
         for block in blocks {
             let position = Position::new(block);
             self.active.push(Block { position, color })
@@ -103,6 +105,7 @@ impl Tetrus {
             6 => self.create_block(GREEN, ZBLOCK, BlockType::Z),
             _ => panic!("Invalid range generated: tetrus.spawn_block()"),
         }
+        self.score += 5;
     }
 
     pub fn is_active(&self) -> bool {
@@ -112,13 +115,13 @@ impl Tetrus {
         true
     }
 
-    pub fn change_status(&mut self) {
+    fn change_status(&mut self) {
         while !self.active.is_empty() {
             self.inactive.push(self.active.pop().unwrap());
         }
     }
 
-    pub fn check_collision(&mut self, collision: Collision) -> bool {
+    fn check_collision(&mut self, collision: Collision) -> bool {
         match collision {
             Collision::Left => {
                 for block in &self.active {
@@ -171,14 +174,14 @@ impl Tetrus {
         }
     }
 
-    pub fn move_active(&mut self) {
+    fn move_active(&mut self) {
         for mut block in &mut self.active {
             block.position.y += 1;
         }
         self.origin.y += 1;
     }
 
-    pub fn check_clear(&mut self) -> bool {
+    fn check_clear(&mut self) -> bool {
         for i in 4..GRID_HEIGHT {
             let count = self.inactive.iter().filter(|n| n.position.y == i).count();
             if count == GRID_WIDTH {
@@ -200,7 +203,7 @@ impl Tetrus {
         false
     }
 
-    pub fn update_tick(&mut self) {
+    fn update_tick(&mut self) {
         if self.tick >= 0.1 {
             self.tick -= 0.02;
         }
@@ -211,13 +214,14 @@ impl Tetrus {
             self.move_active();
         } else {
             self.change_status();
-            if self.check_clear() {
+            while self.check_clear() {
                 self.update_tick();
+                self.score += 100;
             }
         }
     }
 
-    pub fn rotate_block(&mut self) {
+    fn rotate_block(&mut self) {
         let mut active_rotated: Vec<Block> = Vec::new();
         for block in &mut self.active {
             let offset_x: i32 = self.origin.x as i32 - block.position.x as i32;
@@ -286,7 +290,3 @@ impl Tetrus {
         false
     }
 }
-
-//-----------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------
-//-----------------------------------------------------------------------------------
