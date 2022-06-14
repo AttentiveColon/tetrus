@@ -60,6 +60,7 @@ pub struct Tetrus {
     pub origin: Position,
     pub block_id: BlockType,
     pub tick: f64,
+    pub fast_tick: f64,
     pub score: u32,
     pub rng: ThreadRng,
 }
@@ -72,6 +73,7 @@ impl Tetrus {
             origin: Position::new((0, 0)),
             block_id: BlockType::I,
             tick: 0.4,
+            fast_tick: 0.1,
             score: 0,
             rng: thread_rng(),
         }
@@ -119,6 +121,12 @@ impl Tetrus {
         while !self.active.is_empty() {
             self.inactive.push(self.active.pop().unwrap());
         }
+    }
+
+    pub fn swap_tick(&mut self) {
+        let temp = self.tick;
+        self.tick = self.fast_tick;
+        self.fast_tick = temp;
     }
 
     fn check_collision(&mut self, collision: Collision) -> bool {

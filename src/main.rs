@@ -22,5 +22,5 @@ fn get_mq_conf() -> macroquad::prelude::Conf {
 #[macroquad::main(get_mq_conf)]
 async fn main() {
     let mut game = Game::new();
-    game.run().await;
+    while game.run().await {}
 }

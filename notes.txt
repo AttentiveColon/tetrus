@@ -1,8 +1,10 @@
 Todo:
 
-restart game
 
 sound?
+
+clean up parameters to create_block
+
 
 
 rotation:

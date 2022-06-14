@@ -1,11 +1,18 @@
 use macroquad::prelude::*;
+use macroquad::prelude::scene::clear;
 use crate::constants::*;
 use crate::tetrus::*;
+
+pub enum State {
+    Welcome,
+    Running,
+    GameOver,
+}
 
 pub struct Game {
     tetrus: Tetrus,
     time: f64,
-    _is_running: bool,
+    state: State,
 }
 
 impl Game {
@@ -13,7 +20,7 @@ impl Game {
         Game {
             tetrus: Tetrus::new(),
             time: 0.0,
-            _is_running: true,
+            state: State::Welcome,
         }
     }
     
@@ -64,36 +71,44 @@ impl Game {
     }
 
     fn draw_score(&mut self) {
-        draw_text(format!("{}", self.tetrus.score).as_ref(), 5.0, 40.0, 50.0, WHITE);
+        draw_text(format!("{:05}", self.tetrus.score).as_ref(), 5.0, 40.0, 50.0, WHITE);
     }
 
     fn draw_time(&mut self) {
-        draw_text(format!("{}", self.time as u64).as_ref(), screen_width() - 80.0, 40.0, 50.0, WHITE);
+        draw_text(format!("{:04}", self.time as u64).as_ref(), screen_width() - 100.0, 40.0, 50.0, WHITE);
     }
 
     fn player_input(&mut self) {
         if is_key_pressed(KeyCode::Escape) {
             std::process::exit(0);
-        } else if is_key_pressed(KeyCode::A) {
-            self.tetrus.player_move(Movement::Left);
-        } else if is_key_pressed(KeyCode::D) {
-            self.tetrus.player_move(Movement::Right);
-        } else if is_key_pressed(KeyCode::Space) {
-            self.tetrus.player_move(Movement::Drop);
-        } else if is_key_pressed(KeyCode::S) {
-            self.tetrus.player_move(Movement::Rotate);
+        } 
+        if self.tetrus.is_active() {
+            if is_key_pressed(KeyCode::A) {
+                self.tetrus.player_move(Movement::Left);
+            } else if is_key_pressed(KeyCode::D) {
+                self.tetrus.player_move(Movement::Right);
+            } else if is_key_pressed(KeyCode::Space) {
+                self.tetrus.player_move(Movement::Drop);
+            } else if is_key_pressed(KeyCode::W) {
+                self.tetrus.player_move(Movement::Rotate);
+            }
+        }
+        if is_key_pressed(KeyCode::S) {
+            self.tetrus.swap_tick();
+        } else if is_key_released(KeyCode::S) {
+            self.tetrus.swap_tick();
         }
     }
     
-    pub async fn run(&mut self) -> bool {
+    pub async fn running(&mut self) {
         let mut last_update = get_time();
         let start_time = get_time();
     
         loop {
             self.time = get_time() - start_time;
-            if self.tetrus.is_active() {
-                self.player_input();
-            }
+            
+            self.player_input();
+            
             if get_time() - last_update > self.tetrus.tick {
                 last_update = get_time();
                 if !self.tetrus.is_active() {
@@ -106,10 +121,43 @@ impl Game {
             self.draw_score();
             self.draw_time();
             if self.tetrus.is_game_over() {
-                return false;
-            } else {
-                next_frame().await
-            }
+                self.state = State::GameOver;
+                return;
+            } 
+            next_frame().await
         }
+    }
+
+    pub async fn welcome(&mut self) {
+        draw_text("Tetrus", screen_width() / 2.0 - 130.0, screen_height() / 2.0, 100.0, WHITE);
+        draw_text("Press Space", screen_width() / 2.0 - 90.0, screen_height() / 2.0 + 40.0, 40.0, WHITE);
+        if is_key_pressed(KeyCode::Space) {
+            self.state = State::Running;
+        } else if is_key_pressed(KeyCode::Escape) {
+            std::process::exit(0);
+        }
+        next_frame().await
+    }
+
+    pub async fn game_over(&mut self) {
+        draw_text("Game Over", screen_width() / 2.0 - 175.0, screen_height() / 2.0, 100.0, WHITE);
+        draw_text(format!("Score: {:05}", self.tetrus.score).as_ref(), screen_width() / 2.0 - 90.0, screen_height() / 2.0 + 40.0, 40.0, WHITE);
+        draw_text("Press Space", screen_width() / 2.0 - 30.0, screen_height() / 2.0 + 60.0, 20.0, WHITE);
+        if is_key_pressed(KeyCode::Space) {
+            self.state = State::Running;
+            self.tetrus = Tetrus::new();
+        } else if is_key_pressed(KeyCode::Escape) {
+            std::process::exit(0);
+        }
+        next_frame().await
+    }
+
+    pub async fn run(&mut self) -> bool {
+        match self.state {
+            State::Welcome => self.welcome().await,
+            State::Running => self.running().await,
+            State::GameOver => self.game_over().await,
+        }
+        true
     }
 }
