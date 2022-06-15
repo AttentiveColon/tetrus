@@ -1,4 +1,4 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*, audio::{play_sound, PlaySoundParams}};
 use constants::*;
 use game::*;
 
@@ -19,8 +19,10 @@ fn get_mq_conf() -> macroquad::prelude::Conf {
     }
 }
 
+
 #[macroquad::main(get_mq_conf)]
 async fn main() {
-    let mut game = Game::new();
+    //play_background_music().await;
+    let mut game = Game::new().await;
     while game.run().await {}
 }

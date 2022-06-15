@@ -1,6 +1,12 @@
 use crate::constants::*;
 use crate::tetrus::*;
 use macroquad::prelude::*;
+use macroquad::audio::*;
+
+pub async fn play_background_music() {
+    let sound = load_sound("assets/tetrus_background.wav").await.unwrap();
+    play_sound(sound, BACKGROUND_SOUND_PARAMS);
+}
 
 pub enum State {
     Welcome,
@@ -12,14 +18,17 @@ pub struct Game {
     tetrus: Tetrus,
     time: f64,
     state: State,
+    
 }
 
 impl Game {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
+        play_background_music().await;
         Game {
-            tetrus: Tetrus::new(),
+            tetrus: Tetrus::new().await,
             time: 0.0,
             state: State::Welcome,
+            
         }
     }
 
@@ -100,8 +109,10 @@ impl Game {
                 self.tetrus.player_move(Movement::Right);
             } else if is_key_pressed(KeyCode::Space) {
                 self.tetrus.player_move(Movement::Drop);
+                play_sound(self.tetrus.sounds[0], SOUND_PARAMS)
             } else if is_key_pressed(KeyCode::W) {
                 self.tetrus.player_move(Movement::Rotate);
+                play_sound(self.tetrus.sounds[1], SOUND_PARAMS);
             }
         }
         if is_key_pressed(KeyCode::S) {
@@ -194,7 +205,7 @@ impl Game {
         );
         if is_key_pressed(KeyCode::Space) {
             self.state = State::Running;
-            self.tetrus = Tetrus::new();
+            self.tetrus = Tetrus::new().await;
         } else if is_key_pressed(KeyCode::Escape) {
             std::process::exit(0);
         }

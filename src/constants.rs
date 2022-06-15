@@ -1,5 +1,5 @@
 use crate::miniquad::conf::Icon;
-use macroquad::prelude::*;
+use macroquad::{prelude::*, audio::PlaySoundParams};
 
 use crate::icons::{ICON_SMALL, ICON_MEDIUM, ICON_BIG};
 
@@ -46,3 +46,13 @@ pub const TETRUS_TEXT: &str = "Tetrus";
 pub const SPACE_TEXT: &str = "Press Space";
 pub const GAME_OVER_TEXT: &str = "Game Over";
 pub const SCORE_TEXT_PLACEHOLDER: &str = "Score: 00000";
+
+pub const BACKGROUND_SOUND_PARAMS: PlaySoundParams = PlaySoundParams {
+    looped: true,
+    volume: 0.5,
+};
+
+pub const SOUND_PARAMS: PlaySoundParams = PlaySoundParams {
+    looped: false,
+    volume: 1.0,
+};

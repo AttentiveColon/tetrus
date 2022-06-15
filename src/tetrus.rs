@@ -1,4 +1,5 @@
 use macroquad::prelude::Color;
+use macroquad::audio::*;
 use rand::prelude::ThreadRng;
 use rand::{thread_rng, Rng};
 use crate::constants::*;
@@ -62,11 +63,12 @@ pub struct Tetrus {
     pub tick: f64,
     pub fast_tick: f64,
     pub score: u32,
+    pub sounds: [Sound; 3],
     pub rng: ThreadRng,
 }
 
 impl Tetrus {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         Tetrus {
             active: Vec::new(),
             inactive: Vec::new(),
@@ -75,6 +77,9 @@ impl Tetrus {
             tick: 0.4,
             fast_tick: 0.1,
             score: 0,
+            sounds: [load_sound("assets/tetrus_drop.wav").await.unwrap(),
+            load_sound("assets/tetrus_rotate.wav").await.unwrap(),
+            load_sound("assets/tetrus_set.wav").await.unwrap()],
             rng: thread_rng(),
         }
     }
@@ -224,6 +229,7 @@ impl Tetrus {
             self.change_status();
             while self.check_clear() {
                 self.update_tick();
+                play_sound(self.sounds[2], SOUND_PARAMS);
                 self.score += 100;
             }
         }
