@@ -1,18 +1,2 @@
 Todo:
-
-
-sound?
-
-clean up parameters to create_block
-
-
-
-rotation:
-offset_x = origin.x - pos.x
-offset_y = origin.y - pos.y
-
-y1 = -offset_x
-x1 = offset_y
-
-pos.x = origin.x + x1
-pos.y = origin.y + y1
+tidy code
