@@ -4,7 +4,7 @@ use macroquad::prelude::*;
 use macroquad::audio::*;
 
 pub async fn play_background_music() {
-    let sound = load_sound("assets/tetrus_background.wav").await.unwrap();
+    let sound = load_sound("audio/tetrus_background.wav").await.unwrap();
     play_sound(sound, BACKGROUND_SOUND_PARAMS);
 }
 
@@ -18,7 +18,6 @@ pub struct Game {
     tetrus: Tetrus,
     time: f64,
     state: State,
-    
 }
 
 impl Game {
@@ -28,7 +27,6 @@ impl Game {
             tetrus: Tetrus::new().await,
             time: 0.0,
             state: State::Welcome,
-            
         }
     }
 
@@ -55,7 +53,6 @@ impl Game {
                 )
             }
         }
-
         for i in 0..11 {
             draw_line(
                 (i as f32 * BLOCK_SIZE) + DISPLAY_PADDING,

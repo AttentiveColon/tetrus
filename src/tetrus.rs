@@ -77,9 +77,9 @@ impl Tetrus {
             tick: 0.4,
             fast_tick: 0.1,
             score: 0,
-            sounds: [load_sound("assets/tetrus_drop.wav").await.unwrap(),
-            load_sound("assets/tetrus_rotate.wav").await.unwrap(),
-            load_sound("assets/tetrus_set.wav").await.unwrap()],
+            sounds: [load_sound("audio/tetrus_drop.wav").await.unwrap(),
+            load_sound("audio/tetrus_rotate.wav").await.unwrap(),
+            load_sound("audio/tetrus_set.wav").await.unwrap()],
             rng: thread_rng(),
         }
     }
@@ -112,14 +112,11 @@ impl Tetrus {
             6 => self.create_block(GREEN, ZBLOCK, BlockType::Z),
             _ => panic!("Invalid range generated: tetrus.spawn_block()"),
         }
-        self.score += 5;
+        self.update_score(5);
     }
 
     pub fn is_active(&self) -> bool {
-        if self.active.is_empty() {
-            return false;
-        }
-        true
+        !self.active.is_empty()
     }
 
     fn change_status(&mut self) {
@@ -129,9 +126,11 @@ impl Tetrus {
     }
 
     pub fn swap_tick(&mut self) {
-        let temp = self.tick;
-        self.tick = self.fast_tick;
-        self.fast_tick = temp;
+        std::mem::swap(&mut self.tick, &mut self.fast_tick);
+    }
+
+    fn update_score(&mut self, val: u32) {
+        self.score += val;
     }
 
     fn check_collision(&mut self, collision: Collision) -> bool {
@@ -218,7 +217,7 @@ impl Tetrus {
 
     fn update_tick(&mut self) {
         if self.tick >= 0.1 {
-            self.tick -= 0.02;
+            self.tick -= 0.01;
         }
     }
 
@@ -228,9 +227,9 @@ impl Tetrus {
         } else {
             self.change_status();
             while self.check_clear() {
-                self.update_tick();
                 play_sound(self.sounds[2], SOUND_PARAMS);
-                self.score += 100;
+                self.update_tick();
+                self.update_score(100);
             }
         }
     }
