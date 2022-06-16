@@ -1,4 +1,4 @@
-# Tetrus: Minimal Tetris build with Rust
+# Tetrus: Minimal Tetris built with Rust
 
 ![preview](assets/tetrus_preview.gif)
 
