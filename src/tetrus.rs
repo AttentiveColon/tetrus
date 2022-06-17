@@ -1,8 +1,8 @@
+use crate::constants::*;
+use crate::sounds::*;
 use macroquad::prelude::Color;
-use macroquad::audio::*;
 use rand::prelude::ThreadRng;
 use rand::{thread_rng, Rng};
-use crate::constants::*;
 
 pub enum Movement {
     Left,
@@ -11,6 +11,7 @@ pub enum Movement {
     Rotate,
 }
 
+#[derive(PartialEq)]
 pub enum Collision {
     Left,
     Right,
@@ -58,28 +59,31 @@ impl Default for Block {
 pub struct Tetrus {
     pub active: Vec<Block>,
     pub inactive: Vec<Block>,
-    pub origin: Position,
-    pub block_id: BlockType,
-    pub tick: f64,
-    pub fast_tick: f64,
-    pub score: u32,
-    pub sounds: [Sound; 3],
-    pub rng: ThreadRng,
+    pub sounds: SoundCollection,
+    origin: Position,
+    block_id: BlockType,
+    tick: f64,
+    fast_tick: f64,
+    score: u32,
+    rng: ThreadRng,
 }
 
 impl Tetrus {
     pub async fn new() -> Self {
+        let mut sounds = SoundCollection::new();
+        sounds.add_sound("audio/tetrus_drop.wav", "drop").await;
+        sounds.add_sound("audio/tetrus_rotate.wav", "rotate").await;
+        sounds.add_sound("audio/tetrus_set.wav", "set").await;
+
         Tetrus {
             active: Vec::new(),
             inactive: Vec::new(),
+            sounds,
             origin: Position::new((0, 0)),
             block_id: BlockType::I,
             tick: 0.4,
             fast_tick: 0.1,
             score: 0,
-            sounds: [load_sound("audio/tetrus_drop.wav").await.unwrap(),
-            load_sound("audio/tetrus_rotate.wav").await.unwrap(),
-            load_sound("audio/tetrus_set.wav").await.unwrap()],
             rng: thread_rng(),
         }
     }
@@ -129,90 +133,16 @@ impl Tetrus {
         std::mem::swap(&mut self.tick, &mut self.fast_tick);
     }
 
+    pub fn get_tick(&self) -> f64 {
+        self.tick
+    }
+
     fn update_score(&mut self, val: u32) {
         self.score += val;
     }
 
-    fn check_collision(&mut self, collision: Collision) -> bool {
-        match collision {
-            Collision::Left => {
-                for block in &self.active {
-                    if block.position.x == 0 {
-                        return true;
-                    }
-                    for col_block in &self.inactive {
-                        if block.position
-                            == Position::new((col_block.position.x + 1, col_block.position.y))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                false
-            }
-            Collision::Right => {
-                for block in &self.active {
-                    if block.position.x == 9 {
-                        return true;
-                    }
-                    for col_block in &self.inactive {
-                        if block.position
-                            == Position::new((
-                                col_block.position.x.saturating_sub(1),
-                                col_block.position.y,
-                            ))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                false
-            }
-            Collision::Down => {
-                for block in &self.active {
-                    if block.position.y >= 23 {
-                        return true;
-                    }
-                    for col_block in &self.inactive {
-                        if block.position
-                            == Position::new((col_block.position.x, col_block.position.y - 1))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                false
-            }
-        }
-    }
-
-    fn move_active(&mut self) {
-        for mut block in &mut self.active {
-            block.position.y += 1;
-        }
-        self.origin.y += 1;
-    }
-
-    fn check_clear(&mut self) -> bool {
-        for i in 4..GRID_HEIGHT {
-            let count = self.inactive.iter().filter(|n| n.position.y == i).count();
-            if count == GRID_WIDTH {
-                let mut temp_inactive: Vec<Block> = self
-                    .inactive
-                    .iter()
-                    .cloned()
-                    .filter(|n| n.position.y != i)
-                    .collect();
-                for val in &mut temp_inactive {
-                    if val.position.y < i {
-                        val.position.y += 1;
-                    }
-                }
-                self.inactive = temp_inactive;
-                return true;
-            }
-        }
-        false
+    pub fn get_score(&self) -> u32 {
+        self.score
     }
 
     fn update_tick(&mut self) {
@@ -227,11 +157,18 @@ impl Tetrus {
         } else {
             self.change_status();
             while self.check_clear() {
-                play_sound(self.sounds[2], SOUND_PARAMS);
+                self.sounds.play("set", SOUND_PARAMS);
                 self.update_tick();
                 self.update_score(100);
             }
         }
+    }
+
+    fn move_active(&mut self) {
+        for mut block in &mut self.active {
+            block.position.y += 1;
+        }
+        self.origin.y += 1;
     }
 
     fn rotate_block(&mut self) {
@@ -263,6 +200,52 @@ impl Tetrus {
         self.active = active_rotated;
     }
 
+    fn check_collision(&mut self, collision: Collision) -> bool {
+        match collision {
+            Collision::Left | Collision::Right => {
+                for block in &self.active {
+                    if (block.position.x == 0 && collision == Collision::Left)
+                        || (block.position.x == 9 && collision == Collision::Right)
+                    {
+                        return true;
+                    }
+                    for col_block in &self.inactive {
+                        if collision == Collision::Left {
+                            if block.position
+                                == Position::new((col_block.position.x + 1, col_block.position.y))
+                            {
+                                return true;
+                            }
+                        } else if block.position
+                            == Position::new((
+                                col_block.position.x.saturating_sub(1),
+                                col_block.position.y,
+                            ))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                false
+            }
+            Collision::Down => {
+                for block in &self.active {
+                    if block.position.y >= 23 {
+                        return true;
+                    }
+                    for col_block in &self.inactive {
+                        if block.position
+                            == Position::new((col_block.position.x, col_block.position.y - 1))
+                        {
+                            return true;
+                        }
+                    }
+                }
+                false
+            }
+        }
+    }
+
     pub fn player_move(&mut self, direction: Movement) {
         match direction {
             Movement::Left => {
@@ -292,6 +275,28 @@ impl Tetrus {
                 }
             }
         }
+    }
+
+    fn check_clear(&mut self) -> bool {
+        for i in 4..GRID_HEIGHT {
+            let count = self.inactive.iter().filter(|n| n.position.y == i).count();
+            if count == GRID_WIDTH {
+                let mut temp_inactive: Vec<Block> = self
+                    .inactive
+                    .iter()
+                    .cloned()
+                    .filter(|n| n.position.y != i)
+                    .collect();
+                for val in &mut temp_inactive {
+                    if val.position.y < i {
+                        val.position.y += 1;
+                    }
+                }
+                self.inactive = temp_inactive;
+                return true;
+            }
+        }
+        false
     }
 
     pub fn is_game_over(&self) -> bool {

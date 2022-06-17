@@ -2,10 +2,11 @@ use macroquad::prelude::*;
 use constants::*;
 use game::*;
 
+mod game;
+mod tetrus;
+mod sounds;
 mod constants;
 mod icons;
-mod tetrus;
-mod game;
 
 fn get_mq_conf() -> macroquad::prelude::Conf {
     macroquad::prelude::Conf {
