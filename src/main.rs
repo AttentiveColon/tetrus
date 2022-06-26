@@ -1,4 +1,4 @@
-use macroquad::prelude::*;
+use macroquad::{prelude::*, rand::srand};
 use constants::*;
 use game::*;
 
@@ -22,6 +22,7 @@ fn get_mq_conf() -> macroquad::prelude::Conf {
 
 #[macroquad::main(get_mq_conf)]
 async fn main() {
+    srand(macroquad::miniquad::date::now() as u64);
     let mut game = Game::new().await;
     while game.run().await {}
 }

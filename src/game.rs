@@ -96,6 +96,7 @@ impl Game {
 
     fn player_input(&mut self) {
         if is_key_pressed(KeyCode::Escape) {
+            #[cfg(not(target_arch = "wasm32"))]
             std::process::exit(0);
         }
         if self.tetrus.is_active() {
@@ -141,6 +142,7 @@ impl Game {
         if is_key_pressed(KeyCode::Space) {
             self.state = State::Running;
         } else if is_key_pressed(KeyCode::Escape) {
+            #[cfg(not(target_arch = "wasm32"))]
             std::process::exit(0);
         }
         next_frame().await;
@@ -204,6 +206,7 @@ impl Game {
             self.state = State::Running;
             self.tetrus = Tetrus::new().await;
         } else if is_key_pressed(KeyCode::Escape) {
+            #[cfg(not(target_arch = "wasm32"))]
             std::process::exit(0);
         }
         next_frame().await

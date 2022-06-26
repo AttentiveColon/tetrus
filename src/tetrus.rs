@@ -1,8 +1,7 @@
 use crate::constants::*;
 use crate::sounds::*;
 use macroquad::prelude::Color;
-use rand::prelude::ThreadRng;
-use rand::{thread_rng, Rng};
+use macroquad::rand::gen_range;
 
 pub enum Movement {
     Left,
@@ -65,7 +64,6 @@ pub struct Tetrus {
     tick: f64,
     fast_tick: f64,
     score: u32,
-    rng: ThreadRng,
 }
 
 impl Tetrus {
@@ -84,7 +82,6 @@ impl Tetrus {
             tick: 0.4,
             fast_tick: 0.1,
             score: 0,
-            rng: thread_rng(),
         }
     }
 
@@ -106,7 +103,7 @@ impl Tetrus {
     }
 
     pub fn spawn_block(&mut self) {
-        match self.rng.gen_range(0..7) {
+        match gen_range(0, 7) {
             0 => self.create_block(CYAN, IBLOCK, BlockType::I),
             1 => self.create_block(PINK, JBLOCK, BlockType::J),
             2 => self.create_block(ORANGE, LBLOCK, BlockType::L),
