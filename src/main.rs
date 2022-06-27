@@ -14,7 +14,7 @@ fn get_mq_conf() -> macroquad::prelude::Conf {
         window_height: DISPLAY_HEIGHT as i32,
         window_width: DISPLAY_WIDTH as i32,
         fullscreen: false,
-        window_resizable: false,
+        window_resizable: true,
         icon: Some(ICON),
         ..Default::default()
     }

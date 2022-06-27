@@ -18,6 +18,11 @@ pub struct Game {
 impl Game {
     pub async fn new() -> Self {
         let mut bg_music = SoundCollection::new();
+        #[cfg(target_arch = "wasm32")]
+        bg_music
+            .add_sound("/audio/tetrus_background.wav", "bg_track")
+            .await;
+        #[cfg(not(target_arch = "wasm32"))]
         bg_music
             .add_sound("audio/tetrus_background.wav", "bg_track")
             .await;
@@ -30,13 +35,15 @@ impl Game {
     }
 
     fn draw_board(&mut self) {
+        let block_size_width = (screen_width() - (DISPLAY_PADDING * 2.0)) / 10.0;
+        let block_size_height = (screen_height() - (DISPLAY_PADDING * 2.0)) / 20.0;
         for block in &self.tetrus.active {
             if block.position.y > 3 {
                 draw_rectangle(
-                    (block.position.x as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
-                    (block.position.y as f32 * BLOCK_SIZE) + DISPLAY_PADDING - (4.0 * BLOCK_SIZE),
-                    BLOCK_SIZE,
-                    BLOCK_SIZE,
+                    (block.position.x as f32 * block_size_width) + DISPLAY_PADDING,
+                    (block.position.y as f32 * block_size_height) + DISPLAY_PADDING - (4.0 * block_size_height),
+                    block_size_width,
+                    block_size_height,
                     block.color,
                 )
             }
@@ -44,20 +51,20 @@ impl Game {
         for block in &self.tetrus.inactive {
             if block.position.y > 3 {
                 draw_rectangle(
-                    (block.position.x as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
-                    (block.position.y as f32 * BLOCK_SIZE) + DISPLAY_PADDING - (4.0 * BLOCK_SIZE),
-                    BLOCK_SIZE,
-                    BLOCK_SIZE,
+                    (block.position.x as f32 * block_size_width) + DISPLAY_PADDING,
+                    (block.position.y as f32 * block_size_height) + DISPLAY_PADDING - (4.0 * block_size_height),
+                    block_size_width,
+                    block_size_height,
                     block.color,
                 )
             }
         }
         for i in 0..11 {
             draw_line(
-                (i as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
+                (i as f32 * block_size_width) + DISPLAY_PADDING,
                 DISPLAY_PADDING,
-                (i as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
-                DISPLAY_HEIGHT - DISPLAY_PADDING,
+                (i as f32 * block_size_width) + DISPLAY_PADDING,
+                screen_height() - DISPLAY_PADDING,
                 1.0,
                 WHITE,
             );
@@ -65,9 +72,9 @@ impl Game {
         for i in 0..21 {
             draw_line(
                 DISPLAY_PADDING,
-                (i as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
-                DISPLAY_WIDTH - DISPLAY_PADDING,
-                (i as f32 * BLOCK_SIZE) + DISPLAY_PADDING,
+                (i as f32 * block_size_height) + DISPLAY_PADDING,
+                screen_width() - DISPLAY_PADDING,
+                (i as f32 * block_size_height) + DISPLAY_PADDING,
                 1.0,
                 WHITE,
             );

@@ -69,9 +69,18 @@ pub struct Tetrus {
 impl Tetrus {
     pub async fn new() -> Self {
         let mut sounds = SoundCollection::new();
-        sounds.add_sound("audio/tetrus_drop.wav", "drop").await;
-        sounds.add_sound("audio/tetrus_rotate.wav", "rotate").await;
-        sounds.add_sound("audio/tetrus_set.wav", "set").await;
+        #[cfg(target_arch = "wasm32")]
+        {
+            sounds.add_sound("/audio/tetrus_drop.wav", "drop").await;
+            sounds.add_sound("/audio/tetrus_rotate.wav", "rotate").await;
+            sounds.add_sound("/audio/tetrus_set.wav", "set").await;
+        }
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            sounds.add_sound("audio/tetrus_drop.wav", "drop").await;
+            sounds.add_sound("audio/tetrus_rotate.wav", "rotate").await;
+            sounds.add_sound("audio/tetrus_set.wav", "set").await;
+        }
 
         Tetrus {
             active: Vec::new(),
